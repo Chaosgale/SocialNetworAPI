@@ -1,27 +1,26 @@
-// ObjectId() method for converting studentId string into an ObjectId for querying database
 const { ObjectId } = require('mongoose').Types;
 const { Student, Course } = require('../models');
 
-// TODO: Create an aggregate function to get the number of students overall
+// Aggregate function to get the number of students overall
 const headCount = async () => {
-  // Your code here
-  const numberOfStudents = await Student.aggregate();
+  const numberOfStudents = await Student.aggregate()
+    .count('studentCount');
   return numberOfStudents;
 }
 
-// Execute the aggregate method on the Student model and calculate the overall grade by using the $avg operator
+// Aggregate function for getting the overall grade using $avg
 const grade = async (studentId) =>
   Student.aggregate([
-    // TODO: Ensure we include only the student who can match the given ObjectId using the $match operator
-    {
-      // Your code here
-    },
+    // only include the given student by using $match
+    { $match: { _id: new ObjectId(studentId) } },
     {
       $unwind: '$assignments',
     },
-    // TODO: Group information for the student with the given ObjectId alongside an overall grade calculated using the $avg operator
     {
-      // Your code here
+      $group: {
+        _id: new ObjectId(studentId),
+        overallGrade: { $avg: '$assignments.score' },
+      },
     },
   ]);
 
@@ -30,11 +29,13 @@ module.exports = {
   async getStudents(req, res) {
     try {
       const students = await Student.find();
+
       const studentObj = {
         students,
         headCount: await headCount(),
       };
-      return res.json(studentObj);
+
+      res.json(studentObj);
     } catch (err) {
       console.log(err);
       return res.status(500).json(err);
@@ -44,11 +45,10 @@ module.exports = {
   async getSingleStudent(req, res) {
     try {
       const student = await Student.findOne({ _id: req.params.studentId })
-        .select('-__v')
-        .lean();
+        .select('-__v');
 
       if (!student) {
-        return res.status(404).json({ message: 'No student with that ID' });
+        return res.status(404).json({ message: 'No student with that ID' })
       }
 
       res.json({
@@ -75,7 +75,7 @@ module.exports = {
       const student = await Student.findOneAndRemove({ _id: req.params.studentId });
 
       if (!student) {
-        return res.status(404).json({ message: 'No such student exists' })
+        return res.status(404).json({ message: 'No such student exists' });
       }
 
       const course = await Course.findOneAndUpdate(
@@ -99,9 +99,10 @@ module.exports = {
 
   // Add an assignment to a student
   async addAssignment(req, res) {
+    console.log('You are adding an assignment');
+    console.log(req.body);
+
     try {
-      console.log('You are adding an assignment');
-      console.log(req.body);
       const student = await Student.findOneAndUpdate(
         { _id: req.params.studentId },
         { $addToSet: { assignments: req.body } },
@@ -111,7 +112,7 @@ module.exports = {
       if (!student) {
         return res
           .status(404)
-          .json({ message: 'No student found with that ID :(' })
+          .json({ message: 'No student found with that ID :(' });
       }
 
       res.json(student);

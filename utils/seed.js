@@ -16,6 +16,8 @@ connection.once('open', async () => {
     if (studentsCheck.length) {
       await connection.dropCollection('students');
     }
+
+
   // Create empty array to hold the students
   const students = [];
 
@@ -38,13 +40,13 @@ connection.once('open', async () => {
   }
 
   // Add students to the collection and await the results
-  await Student.collection.insertMany(students);
+  const studentData = await Student.create(students);
 
   // Add courses to the collection and await the results
-  await Course.collection.insertOne({
+  await Course.create({
     courseName: 'UCLA',
     inPerson: false,
-    students: [...students],
+    students: [...studentData.map(({_id}) => _id)],
   });
 
   // Log out the seed data to indicate what should appear in the database

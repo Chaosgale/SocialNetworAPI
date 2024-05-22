@@ -4,7 +4,7 @@ module.exports = {
   // Get all courses
   async getCourses(req, res) {
     try {
-      const courses = await Course.find();
+      const courses = await Course.find().populate('students');
       res.json(courses);
     } catch (err) {
       res.status(500).json(err);
@@ -14,7 +14,7 @@ module.exports = {
   async getSingleCourse(req, res) {
     try {
       const course = await Course.findOne({ _id: req.params.courseId })
-        .select('-__v');
+        .populate('students');
 
       if (!course) {
         return res.status(404).json({ message: 'No course with that ID' });
@@ -41,7 +41,7 @@ module.exports = {
       const course = await Course.findOneAndDelete({ _id: req.params.courseId });
 
       if (!course) {
-        return res.status(404).json({ message: 'No course with that ID' });
+        res.status(404).json({ message: 'No course with that ID' });
       }
 
       await Student.deleteMany({ _id: { $in: course.students } });
@@ -60,7 +60,7 @@ module.exports = {
       );
 
       if (!course) {
-        return res.status(404).json({ message: 'No course with this id!' });
+        res.status(404).json({ message: 'No course with this id!' });
       }
 
       res.json(course);
