@@ -1,5 +1,5 @@
 const { Schema, model} = require('mongoose');
-const { Thought } = require('.');
+// const { Thought } = require('.');
 
 const emailRegex = /^([a-z0-9_\.-]+)@([\da-z\.-]+)\.([a-z\.]{2,6})$/;
 
@@ -29,8 +29,19 @@ const userSchema = new Schema (
                 ref: 'User',
             },
         ],
-    });
+    },
+    {
+        toJSON: {
+            virtauls: true,
+        },
+        id: false,
+    }
+);
 
-    const User = model('User', userSchema);
+userSchema.virtaul('friendCount').get(function() {
+    return this.friends.length
+})
 
-    model.exports = User;
+const User = model('User', userSchema);
+
+model.exports = User;
