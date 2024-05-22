@@ -1,4 +1,7 @@
-const { Schema, model} = require('mongoose')
+const { Schema, model} = require('mongoose');
+const { Thought } = require('.');
+
+const emailRegex = /^([a-z0-9_\.-]+)@([\da-z\.-]+)\.([a-z\.]{2,6})$/;
 
 const userSchema = new Schema (
     {
@@ -12,6 +15,22 @@ const userSchema = new Schema (
             type: String,
             required: true,
             unique: true,
+            match: [emailRegex, 'Enter a valid email address'],
         },
-    }
-)
+        thoughts:[
+            {
+              type: Schema.Types.ObjectId,
+              ref: 'thought',
+            },
+          ],
+        friends: [
+            {
+                type: Schema.Types.ObjectId,
+                ref: 'User',
+            },
+        ],
+    });
+
+    const User = model('User', userSchema);
+
+    model.exports = User;
